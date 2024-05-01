@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from tensorflow import keras
-from keras.models import load_model
+from tensorflow import keras
+from keras.models import Sequential, load_model
+from keras.layers import Dense, Embedding, LSTM, Conv1D, MaxPooling1D, Bidirectional, Dropout
 from keras.preprocessing.sequence import pad_sequences
 import os
 from word_process import WordProcess
@@ -23,9 +25,22 @@ model_path = f"models/model_cnn_v1.weights.h5"
 tokenizer_path = f"models/tokenizer_cnn_v1.pkl"
 class_path = f"models/disease_classes_cnn_v1.txt"
 
-loaded_model = load_model("saved_model.keras")
+sent_length=20
+voc_size = 50000
+embedding_vector_features=40
+model_loaded = None
+num_classes = 30
 
-loaded_model.load_weights(model_path)
+model_loaded = Sequential()
+model_loaded.add(Embedding(voc_size,embedding_vector_features,input_shape=(sent_length,)))
+model_loaded.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+model_loaded.add(MaxPooling1D(pool_size=2))
+model_loaded.add(LSTM(100))
+model_loaded.add(Dropout(0.3))
+model_loaded.add(Dense(num_classes,activation='softmax'))
+model_loaded.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+
+model_loaded.load_weights(model_path)
 
 
 nltk.download('stopwords')
@@ -55,7 +70,7 @@ disease_classes, len(disease_classes)
 @app.route('/chatbot', methods=['POST'])
 def detect_disease():
     user_input = request.json['symptoms']
-    ind = loaded_model.predict(np.array([preprocess_text(user_input)]), verbose=0).argmax()
+    ind = model_loaded.predict(np.array([preprocess_text(user_input)]), verbose=0).argmax()
 
     return jsonify({"disease": disease_classes[ind]}), 200
 
