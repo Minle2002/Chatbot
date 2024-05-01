@@ -26,6 +26,17 @@ embedding_vector_features=40
 model_loaded = None
 num_classes = 30
 
+model_loaded = Sequential()
+model_loaded.add(Embedding(voc_size,embedding_vector_features,input_shape=(sent_length,)))
+model_loaded.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+model_loaded.add(MaxPooling1D(pool_size=2))
+model_loaded.add(LSTM(100))
+model_loaded.add(Dropout(0.3))
+model_loaded.add(Dense(num_classes,activation='softmax'))
+model_loaded.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+
+model_loaded.save("saved_model.keras")
+
 model_loaded = load_model("saved_model.keras")
 
 print(model_loaded.summary())
