@@ -1,6 +1,6 @@
 flask
 flask-cors
-tensorflow==2.16.1
+tensorflow
 keras==3.3.3
 nltk
 pandas
